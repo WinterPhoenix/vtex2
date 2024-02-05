@@ -1,6 +1,7 @@
 [submodule "external/vtflib"]
 	path = external/vtflib
-	url = https://github.com/StrataSource/VTFLib.git
+	url = https://github.com/WinterPhoenix/VTFLib.git
+	branch = fix-convertinplace
 [submodule "external/fmtlib"]
 	path = external/fmtlib
 	url = https://github.com/fmtlib/fmt
