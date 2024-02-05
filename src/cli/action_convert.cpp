@@ -306,6 +306,24 @@ bool ActionConvert::process_file(
 	auto format = ImageFormatFromUserString(formatStr.c_str());
 	auto vtfFile = std::make_unique<CVTFFile>();
 
+	// Determine the channel type needed for the desired image format
+	auto formatInfo = CVTFFile::GetImageFormatInfo(format);
+	imglib::ChannelType procChanType;
+
+	auto maxBpp = std::max(
+		std::max(formatInfo.uiRedBitsPerPixel, formatInfo.uiGreenBitsPerPixel),
+		std::max(formatInfo.uiBlueBitsPerPixel, formatInfo.uiAlphaBitsPerPixel));
+
+	if (maxBpp > 16) {
+		procChanType = imglib::Float;
+	}
+	else if (maxBpp > 8) {
+		procChanType = imglib::UInt16;
+	}
+	else {
+		procChanType = imglib::UInt8;
+	}
+
 	// If we're processing a VTF, let's add that VTF image data
 	size_t initialSize = 0;
 	if (isvtf) {
