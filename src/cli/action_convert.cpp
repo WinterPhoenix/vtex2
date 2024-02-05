@@ -306,33 +306,10 @@ bool ActionConvert::process_file(
 	auto format = ImageFormatFromUserString(formatStr.c_str());
 	auto vtfFile = std::make_unique<CVTFFile>();
 
-	// We will choose the best format to operate on here. This simplifies later code and lets us avoid extraneous
-	// conversions
-	auto formatInfo = CVTFFile::GetImageFormatInfo(format);
-	imglib::ChannelType procChanType;
-	const auto procFormat = [formatInfo, &procChanType]() -> VTFImageFormat
-	{
-		auto maxBpp = std::max(
-			std::max(formatInfo.uiRedBitsPerPixel, formatInfo.uiGreenBitsPerPixel),
-			std::max(formatInfo.uiBlueBitsPerPixel, formatInfo.uiAlphaBitsPerPixel));
-		if (maxBpp > 16) {
-			procChanType = imglib::Float;
-			return IMAGE_FORMAT_RGBA32323232F;
-		}
-		else if (maxBpp > 8) {
-			procChanType = imglib::UInt16;
-			return IMAGE_FORMAT_RGBA16161616F;
-		}
-		else {
-			procChanType = imglib::UInt8;
-			return IMAGE_FORMAT_RGBA8888;
-		}
-	}();
-
 	// If we're processing a VTF, let's add that VTF image data
 	size_t initialSize = 0;
 	if (isvtf) {
-		auto* srcVtf = init_from_file(srcFile, vtfFile.get(), procFormat);
+		auto* srcVtf = init_from_file(srcFile, vtfFile.get(), format);
 		if (!srcVtf) {
 			std::cerr << fmt::format("Could not open {}\n", srcFile.string());
 			return false;
@@ -340,7 +317,7 @@ bool ActionConvert::process_file(
 
 		initialSize = srcVtf->GetSize();
 
-		if (!add_vtf_image_data(srcVtf, vtfFile.get(), procFormat)) {
+		if (!add_vtf_image_data(srcVtf, vtfFile.get(), format)) {
 			delete srcVtf;
 			std::cerr << "Could not add image data\n";
 			return false;
@@ -348,7 +325,7 @@ bool ActionConvert::process_file(
 		delete srcVtf;
 	}
 	// Add standard image data
-	else if (!add_image_data(srcFile, vtfFile.get(), procFormat, true)) {
+	else if (!add_image_data(srcFile, vtfFile.get(), format, true)) {
 		std::cerr << "Could not add image data from file " << srcFile << "\n";
 		return false;
 	}
